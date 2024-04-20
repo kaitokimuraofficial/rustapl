@@ -1,44 +1,43 @@
-#[derive(PartialEq, Debug)]
-enum Term {
-    If(Box<Term>, Box<Term>, Box<Term>),
-    True,
-    False,
-}
+#![feature(box_patterns)]
 
-fn is_value(t: Term) -> bool {
-    match t {
-        Term::True => true,
-        Term::False => true,
-        Term::If(_t1, _t2, _t3) => false,
-    }
-}
-
-fn e_if(t: Term) -> Term {
-    match t {
-        Term::If(t1, t2, t3) => match *t1 {
-            Term::True => *t2,
-            Term::False => *t3,
-            _ => e_if(Term::If(Box::new(e_if(*t1)), t2, t3)),
-        },
-        // This is Error cuz e_if is not affected to term thats not IF
-        _ => Term::True,
-    }
-}
+mod untyped;
 
 fn main() {
-    println!("Hello");
 }
 
 #[test]
-fn test() {
-    assert_eq!(is_value(Term::True), true);
-    assert_eq!(is_value(Term::False), true);
-    assert_eq!(
-        e_if(Term::If(
-            Box::new(Term::True),
-            Box::new(Term::True),
-            Box::new(Term::True)
-        )),
-        Term::True
+fn untyped_test() {
+    assert_eq!(untyped::is_value(untyped::Term::True), Ok(true));
+    assert_eq!(untyped::is_value(untyped::Term::False), Ok(true));
+
+    let s = untyped::Term::If(
+        Box::new(untyped::Term::True),
+        Box::new(untyped::Term::False),
+        Box::new(untyped::Term::False),
     );
+    let t = untyped::Term::If(
+        Box::new(s),
+        Box::new(untyped::Term::True),
+        Box::new(untyped::Term::True),
+    );
+    let u = untyped::Term::If(
+        Box::new(untyped::Term::False),
+        Box::new(untyped::Term::True),
+        Box::new(untyped::Term::True),
+    );
+
+    assert_eq!(
+        untyped::eval_1(untyped::Term::If(
+            Box::new(t),
+            Box::new(untyped::Term::False),
+            Box::new(untyped::Term::False)
+        )),
+        Ok(untyped::Term::If(
+            Box::new(u),
+            Box::new(untyped::Term::False),
+            Box::new(untyped::Term::False)
+        ))
+    );
+
+
 }
