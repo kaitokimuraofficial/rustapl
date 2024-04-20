@@ -1,21 +1,27 @@
 #[derive(PartialEq, Debug)]
 enum Term {
-    TermTrue,
-    TermFalse,
-    Val(Val),
+    If(Box<Term>, Box<Term>, Box<Term>),
+    True,
+    False,
 }
 
-#[derive(PartialEq, Debug)]
-enum Val {
-    ValTrue,
-    ValFalse,
-}
-
-fn is_val(t: Term) -> Val {
+fn is_value(t: Term) -> bool {
     match t {
-        Term::TermTrue => Val::ValTrue,
-        Term::TermFalse => Val::ValFalse,
-        Term::Val(val) => val,
+        Term::True => true,
+        Term::False => true,
+        Term::If(_t1, _t2, _t3) => false,
+    }
+}
+
+fn e_if(t: Term) -> Term {
+    match t {
+        Term::If(t1, t2, t3) => match *t1 {
+            Term::True => *t2,
+            Term::False => *t3,
+            _ => e_if(Term::If(Box::new(e_if(*t1)), t2, t3)),
+        },
+        // This is Error cuz e_if is not affected to term thats not IF
+        _ => Term::True,
     }
 }
 
@@ -25,6 +31,14 @@ fn main() {
 
 #[test]
 fn test() {
-    assert_eq!(is_val(Term::TermTrue), Val::ValTrue);
-    assert_eq!(is_val(Term::TermFalse), Val::ValFalse);
+    assert_eq!(is_value(Term::True), true);
+    assert_eq!(is_value(Term::False), true);
+    assert_eq!(
+        e_if(Term::If(
+            Box::new(Term::True),
+            Box::new(Term::True),
+            Box::new(Term::True)
+        )),
+        Term::True
+    );
 }
