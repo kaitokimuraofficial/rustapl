@@ -1,8 +1,26 @@
 #![feature(box_patterns)]
 
+use crate::untyped::Term;
+
 mod untyped;
 
 fn main() {
+    let pp = untyped::Term::Pred(Box::new(untyped::Term::Succ(Box::new(
+        untyped::Term::Pred(Box::new(untyped::Term::Zero)),
+    ))));
+    println!(
+        "Pred ( Succ ( Pred ( Zero ) ) ) is {:?}",
+        untyped::eval_1(pp)
+    );
+
+    let pp2 = untyped::Term::Succ(Box::new(untyped::Term::Pred(Box::new(untyped::Term::Zero))));
+    println!(
+        "Succ ( Pred ( Zero ) ) is {:?}",
+        untyped::eval_1(pp2).unwrap()
+    );
+
+    let pp3 = untyped::Term::Pred(Box::new(untyped::Term::Zero));
+    println!("Pred ( Zero ) is {:?}", untyped::eval_1(pp3).unwrap());
 }
 
 #[test]
@@ -39,5 +57,9 @@ fn untyped_test() {
         ))
     );
 
-
+    let pp = untyped::Term::Pred(Box::new(untyped::Term::Succ(Box::new(
+        untyped::Term::Pred(Box::new(untyped::Term::Zero)),
+    ))));
+    let pp2 = untyped::Term::Pred(Box::new(untyped::Term::Succ(Box::new(untyped::Term::Zero))));
+    assert_eq!(untyped::eval_1(pp), Ok(pp2));
 }
