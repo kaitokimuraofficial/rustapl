@@ -1,65 +1,52 @@
 #![feature(box_patterns)]
 
-use crate::untyped::Term;
+use crate::untyped::*;
 
 mod untyped;
 
-fn main() {
-    let pp = untyped::Term::Pred(Box::new(untyped::Term::Succ(Box::new(
-        untyped::Term::Pred(Box::new(untyped::Term::Zero)),
-    ))));
-    println!(
-        "Pred ( Succ ( Pred ( Zero ) ) ) is {:?}",
-        untyped::eval_1(pp)
-    );
-
-    let pp2 = untyped::Term::Succ(Box::new(untyped::Term::Pred(Box::new(untyped::Term::Zero))));
-    println!(
-        "Succ ( Pred ( Zero ) ) is {:?}",
-        untyped::eval_1(pp2).unwrap()
-    );
-
-    let pp3 = untyped::Term::Pred(Box::new(untyped::Term::Zero));
-    println!("Pred ( Zero ) is {:?}", untyped::eval_1(pp3).unwrap());
-}
+fn main() {}
 
 #[test]
 fn untyped_test() {
-    assert_eq!(untyped::is_value(untyped::Term::True), Ok(true));
-    assert_eq!(untyped::is_value(untyped::Term::False), Ok(true));
+    assert_eq!(is_value(Term::True), Ok(true));
+    assert_eq!(is_value(Term::False), Ok(true));
 
-    let s = untyped::Term::If(
-        Box::new(untyped::Term::True),
-        Box::new(untyped::Term::False),
-        Box::new(untyped::Term::False),
+    let s = Term::If(
+        Box::new(Term::True),
+        Box::new(Term::False),
+        Box::new(Term::False),
     );
-    let t = untyped::Term::If(
-        Box::new(s),
-        Box::new(untyped::Term::True),
-        Box::new(untyped::Term::True),
-    );
-    let u = untyped::Term::If(
-        Box::new(untyped::Term::False),
-        Box::new(untyped::Term::True),
-        Box::new(untyped::Term::True),
+    let t = Term::If(Box::new(s), Box::new(Term::True), Box::new(Term::True));
+    let u = Term::If(
+        Box::new(Term::False),
+        Box::new(Term::True),
+        Box::new(Term::True),
     );
 
     assert_eq!(
-        untyped::eval_1(untyped::Term::If(
+        eval_1(Term::If(
             Box::new(t),
-            Box::new(untyped::Term::False),
-            Box::new(untyped::Term::False)
+            Box::new(Term::False),
+            Box::new(Term::False)
         )),
-        Ok(untyped::Term::If(
+        Ok(Term::If(
             Box::new(u),
-            Box::new(untyped::Term::False),
-            Box::new(untyped::Term::False)
+            Box::new(Term::False),
+            Box::new(Term::False)
         ))
     );
 
-    let pp = untyped::Term::Pred(Box::new(untyped::Term::Succ(Box::new(
-        untyped::Term::Pred(Box::new(untyped::Term::Zero)),
-    ))));
-    let pp2 = untyped::Term::Pred(Box::new(untyped::Term::Succ(Box::new(untyped::Term::Zero))));
-    assert_eq!(untyped::eval_1(pp), Ok(pp2));
+    assert_eq!(
+        eval_1(Term::Pred(Box::new(Term::Succ(Box::new(Term::Pred(
+            Box::new(Term::Zero)
+        )))))),
+        Ok(Term::Pred(Box::new(Term::Succ(Box::new(Term::Zero)))))
+    );
+
+    assert_eq!(
+        eval_1(Term::Succ(Box::new(Term::Pred(Box::new(Term::Zero))))),
+        Ok((Term::Succ(Box::new(Term::Zero))))
+    );
+
+    assert_eq!(eval_1(Term::Pred(Box::new(Term::Zero))), Ok((Term::Zero)));
 }

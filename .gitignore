@@ -1,1 +1,6 @@
+# dotfiles
+.vscode
+.DS_Store
+
+# files that should be ignored
 /target

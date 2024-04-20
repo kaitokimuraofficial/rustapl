@@ -78,8 +78,8 @@ pub fn e_if(t: Term) -> Result<Term, CustomError> {
 pub fn e_succ(t: Term) -> Result<Term, CustomError> {
     match t {
         Term::Succ(t1) => {
-            if let Ok(evalated_t1) = eval_1(*t1) {
-                e_succ(evalated_t1)
+            if let Ok(evaluated_t1) = eval_1(*t1) {
+                e_succ(evaluated_t1)
             } else {
                 Err(CustomError {
                     message: "t1 can not be evaluated anymore.".to_string(),
@@ -113,8 +113,8 @@ pub fn e_pred_succ(t: Term) -> Result<Term, CustomError> {
 pub fn e_pred(t: Term) -> Result<Term, CustomError> {
     match t {
         Term::Succ(t1) => {
-            if let Ok(evalated_t1) = eval_1(*t1) {
-                Ok(Term::Pred(Box::new(evalated_t1)))
+            if let Ok(evaluated_t1) = eval_1(*t1) {
+                Ok(Term::Pred(Box::new(evaluated_t1)))
             } else {
                 Err(CustomError {
                     message: "t1 can not be evaluated anymore.".to_string(),
