@@ -9,6 +9,9 @@ pub enum Term {
     Succ(Box<Term>),
     Pred(Box<Term>),
     IsZero(Box<Term>),
+    Var(i8, i8),
+    Abs(String, Box<Term>),
+    App(Box<Term>, Box<Term>),
 }
 
 #[derive(PartialEq, Debug)]
@@ -24,7 +27,8 @@ impl Display for CustomError {
 
 pub fn is_value(t: Term) -> Result<bool, CustomError> {
     match t {
-        Term::True | Term::False => Ok(true),
+        Term::True | Term::False | Term::Abs(_, _) => Ok(true),
+        Term::Var(_, _) => Ok(false),
         _ => is_numerable(t),
     }
 }
@@ -162,6 +166,61 @@ pub fn e_iszero(t: Term) -> Result<Term, CustomError> {
     }
 }
 
+fn internal_shift(cutoff: i8, d: i8, t: Term) -> Result<Term, CustomError> {
+    match t {
+        Term::Var(idx, len) => {
+            if idx >= cutoff {
+                Ok(Term::Var(idx + d, len + d))
+            } else {
+                Ok(Term::Var(idx, len + d))
+            }
+        }
+        Term::Abs(name, box t1) => Ok(Term::Abs(
+            name,
+            Box::new(internal_shift(cutoff + 1, d, t1)?),
+        )),
+        Term::App(box t1, box t2) => Ok(Term::App(
+            Box::new(internal_shift(cutoff, d, t1)?),
+            Box::new(internal_shift(cutoff, d, t2)?),
+        )),
+        _ => Err(CustomError {
+            message: "can not be internally shifted anymore.".to_string(),
+        }),
+    }
+}
+
+pub fn term_shift(d: i8, t: Term) -> Result<Term, CustomError> {
+    internal_shift(0, d, t)
+}
+
+fn internal_subst(cutoff: i8, j: i8, s: Term, t: Term) -> Result<Term, CustomError> {
+    match t {
+        Term::Var(idx, len) => {
+            if idx == cutoff + j {
+                Ok(term_shift(cutoff, s)?)
+            } else {
+                Ok(Term::Var(idx, len))
+            }
+        }
+        Term::Abs(name, box t1) => Ok(Term::Abs(
+            name,
+            Box::new(internal_subst(cutoff + 1, j, s, t1)?),
+        )),
+        Term::App(box t1, box t2) => Ok(Term::App(
+            Box::new(internal_subst(cutoff, j, s.clone(), t1)?),
+            Box::new(internal_subst(cutoff, j, s.clone(), t2)?),
+        )),
+        _ => Err(CustomError {
+            message: "can not be internally substituted anymore.".to_string(),
+        }),
+    }
+}
+
+// term_subst j s t := [j↦s]t
+pub fn term_subst(j: i8, s: Term, t: Term) -> Result<Term, CustomError> {
+    internal_subst(0, j, s, t)
+}
+
 pub fn eval_1(t: Term) -> Result<Term, CustomError> {
     match t {
         Term::If(box Term::True, _, _) => e_if_true(t),
@@ -174,6 +233,7 @@ pub fn eval_1(t: Term) -> Result<Term, CustomError> {
         Term::IsZero(box Term::Zero) => e_iszero_zero(t),
         Term::IsZero(box Term::Succ(box t1)) => e_iszero_succ(t1),
         Term::IsZero(box t1) => Ok(Term::IsZero(Box::new(eval_1(t1)?))),
+        // TODO: Add some kinds of Term::App evaluation.
         _ => Err(CustomError {
             message: "t is not evaluated".to_string(),
         }),

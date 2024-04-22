@@ -45,8 +45,13 @@ fn untyped_test() {
 
     assert_eq!(
         eval_1(Term::Succ(Box::new(Term::Pred(Box::new(Term::Zero))))),
-        Ok((Term::Succ(Box::new(Term::Zero))))
+        Ok(Term::Succ(Box::new(Term::Zero)))
     );
 
-    assert_eq!(eval_1(Term::Pred(Box::new(Term::Zero))), Ok((Term::Zero)));
+    assert_eq!(eval_1(Term::Pred(Box::new(Term::Zero))), Ok(Term::Zero));
+}
+
+#[test]
+fn untyped_test_lambda() {
+    assert_eq!(is_value(Term::Var(0, 1),), Ok(false));
 }
